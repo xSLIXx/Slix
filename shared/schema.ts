@@ -3,17 +3,17 @@ import { pgTable, text, varchar, timestamp, boolean, integer } from "drizzle-orm
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  hwid: text("hwid"),
-  ipAddress: text("ip_address"),
-  isAdmin: boolean("is_admin").default(false),
-  isBlocked: boolean("is_blocked").default(false),
-  createdAt: timestamp("created_at").default(sql`now()`),
-  lastLogin: timestamp("last_login"),
+await db.insert(users).values({
+  id: "bb216b03-1153-4ce5-b974-adb56c6bcd3a",
+  username: "ADMIN",
+  email: "admin@primeui.com",
+  password: "ebeb52353990c09c1e7af75813df276aa5939e20cb038ddaa4dbb1afdeb19a91dd814defdf0eecd985bced253b15910551ed02603aa42ce91305e1b830e09e8d.c5d0619d54efd760c9182371a6f92b16",
+  hwid: null,
+  ipAddress: "10.82.3.250",
+  isAdmin: true,
+  isBlocked: false,
+  createdAt: new Date(),
+  lastLogin: new Date(),
 });
 
 export const accessKeys = pgTable("access_keys", {
