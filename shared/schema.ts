@@ -3,39 +3,43 @@ import { pgTable, text, varchar, timestamp, boolean, integer } from "drizzle-orm
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-await db.insert(users).values({
-  id: "bb216b03-1153-4ce5-b974-adb56c6bcd3a",
-  username: "ADMIN",
-  email: "admin@primeui.com",
-  password: "ebeb52353990c09c1e7af75813df276aa5939e20cb038ddaa4dbb1afdeb19a91dd814defdf0eecd985bced253b15910551ed02603aa42ce91305e1b830e09e8d.c5d0619d54efd760c9182371a6f92b16",
-  hwid: null,
-  ipAddress: "10.82.3.250",
-  isAdmin: true,
-  isBlocked: false,
-  createdAt: new Date(),
-  lastLogin: new Date(),
+// Users Table
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sqlgen_random_uuid()),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  hwid: text("hwid"),
+  ipAddress: text("ip_address"),
+  isAdmin: boolean("is_admin").default(false),
+  isBlocked: boolean("is_blocked").default(false),
+  createdAt: timestamp("created_at").default(sqlnow()),
+  lastLogin: timestamp("last_login"),
 });
 
+// Access Keys Table
 export const accessKeys = pgTable("access_keys", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey().default(sqlgen_random_uuid()),
   keyValue: text("key_value").notNull().unique(),
   userId: varchar("user_id").references(() => users.id),
   isActive: boolean("is_active").default(true),
   expiresAt: timestamp("expires_at"),
-  createdAt: timestamp("created_at").default(sql`now()`),
+  createdAt: timestamp("created_at").default(sqlnow()),
   usedAt: timestamp("used_at"),
   prefix: text("prefix"),
   notes: text("notes"),
 });
 
+// Login Attempts Table
 export const loginAttempts = pgTable("login_attempts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id").primaryKey().default(sqlgen_random_uuid()),
   username: text("username"),
   ipAddress: text("ip_address").notNull(),
   success: boolean("success").default(false),
-  timestamp: timestamp("timestamp").default(sql`now()`),
+  timestamp: timestamp("timestamp").default(sqlnow()),
 });
 
+// Relations
 export const userRelations = relations(users, ({ many }) => ({
   accessKeys: many(accessKeys),
 }));
@@ -47,6 +51,7 @@ export const accessKeyRelations = relations(accessKeys, ({ one }) => ({
   }),
 }));
 
+// Insert Schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -61,6 +66,7 @@ export const insertAccessKeySchema = createInsertSchema(accessKeys).omit({
   usedAt: true,
 });
 
+// Validation Schemas
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -80,6 +86,7 @@ export const keyGenerationSchema = z.object({
   notes: z.string().optional(),
 });
 
+// Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAccessKey = z.infer<typeof insertAccessKeySchema>;
