@@ -1,6 +1,33 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import passport from "passport";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
+
+// User-ID in Session speichern
+passport.serializeUser((user: any, done) => {
+  done(null, user.id); // nur die id speichern
+});
+
+// User anhand ID aus DB wiederherstellen
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id));
+
+    if (result.length === 0) {
+      return done(new Error("User not found"));
+    }
+
+    return done(null, result[0]);
+  } catch (err) {
+    return done(err);
+  }
+});
 
 const app = express();
 app.use(express.json());
